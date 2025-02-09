@@ -1,0 +1,79 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- ESP Toggle
+local ESPEnabled = false
+
+-- Function to create ESP
+local function createESP(character)
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		if not character:FindFirstChild("ESPHighlight") then
+			local highlight = Instance.new("Highlight")
+			highlight.Name = "ESPHighlight"
+			highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Red
+			highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- White
+			highlight.Parent = character
+		end
+	end
+end
+
+-- Function to remove ESP
+local function removeESP()
+	for _, model in workspace:GetChildren() do
+		if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+			if model:FindFirstChild("ESPHighlight") then
+				model:FindFirstChild("ESPHighlight"):Destroy()
+			end
+		end
+	end
+end
+
+-- Function to toggle ESP
+local function toggleESP(state)
+	ESPEnabled = state
+	if ESPEnabled then
+		for _, model in workspace:GetChildren() do
+			if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+				createESP(model)
+			end
+		end
+	else
+		removeESP()
+	end
+end
+
+-- Function to handle chat detection
+local function onPlayerChatted(player, msg)
+	msg = msg:lower()
+	if msg == "enable" then
+		toggleESP(true)
+	elseif msg == "disable" then
+		toggleESP(false)
+	end
+end
+
+-- Connect chat event for each player
+Players.PlayerAdded:Connect(function(player)
+	player.Chatted:Connect(function(msg)
+		onPlayerChatted(player, msg)
+	end)
+
+	player.CharacterAdded:Connect(function(character)
+		if ESPEnabled then
+			createESP(character)
+		end
+	end)
+end)
+
+-- Apply ESP to existing players
+for _, player in Players:GetPlayers() do
+	player.Chatted:Connect(function(msg)
+		onPlayerChatted(player, msg)
+	end)
+
+	if player.Character then
+		if ESPEnabled then
+			createESP(player.Character)
+		end
+	end
+end
